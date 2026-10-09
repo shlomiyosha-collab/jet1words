@@ -14,7 +14,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
-      - run: unzip Jet1Words.zip
+      - run: unzip -o "$(ls -t *.zip | head -1)"
       - run: cd Jet1Words && gradle assembleDebug
       - uses: actions/upload-artifact@v4
         with:
