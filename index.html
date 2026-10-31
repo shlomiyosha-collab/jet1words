@@ -33,7 +33,7 @@ const $=s=>document.querySelector(s),acts=[];
 let cfg={v:"",r:.8,p:1};try{Object.assign(cfg,JSON.parse(localStorage.getItem("jet1cfg")||"{}"))}catch(e){}
 const sv=()=>{try{localStorage.setItem("jet1cfg",JSON.stringify(cfg))}catch(e){}},voices=()=>SS.getVoices().filter(v=>/^en/i.test(v.lang));
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let sid=0,fin=false,rec=null,tries=0,auto=0,L=[],i=0,score=0,res=[],silent=false,quiz=false,Q=[];
+let sent=false,O=null,sid=0,fin=false,rec=null,tries=0,auto=0,L=[],i=0,score=0,res=[],silent=false,quiz=false,Q=[];
 const sh=a=>[...a].sort(()=>Math.random()-.5);
 function B(t,c,f){acts.push(f);return `<button class="${c||''}" onclick="acts[${acts.length-1}]()">${t}</button>`}
 function show(h,back=true){try{rec&&rec.abort()}catch(e){}$("#app").innerHTML=h+(back?B("🏠 תפריט ראשי","hm",home):"")}
@@ -43,16 +43,19 @@ function msg(t,c){const m=$("#msg");if(m){m.textContent=t;m.className="msg "+(c|
 /* ---------- matching ---------- */
 const norm=s=>s.toLowerCase().replace(/&/g," and ").replace(/10/g,"ten").replace(/[^a-z ]/g,"").trim(),key=s=>norm(s).replace(/ /g,"");
 function lev(a,b){let p=[...Array(b.length+1).keys()];for(let x=1;x<=a.length;x++){const c=[x];for(let y=1;y<=b.length;y++)c[y]=Math.min(p[y]+1,c[y-1]+1,p[y-1]+(a[x-1]==b[y-1]?0:1));p=c}return p[b.length]}
-function match(alts){const w=L[i][0].toLowerCase(),ok=new Set([key(w),...(w[0]=="h"?[key(w).slice(1)]:[]),...(AL[w]||"").split(" ").filter(Boolean).map(key)]);
+function sameW(h,w){const k=key(h),t=key(w);if(!k)return false;if(k==t)return true;if((AL[t]||"").split(" ").map(key).includes(k))return true;if(t[0]=="h"&&k==t.slice(1))return true;return t.length>=4&&lev(k,t)<=1}
+function matchS(alts){const tw=norm(L[i][0]).split(" ").filter(Boolean),need=Math.max(1,Math.ceil(tw.length*.7));return alts.some(a=>{const hw=norm(a).split(" ");return tw.filter(w=>hw.some(h=>sameW(h,w))).length>=need})}
+function match(alts){if(sent)return matchS(alts);const w=L[i][0].toLowerCase(),ok=new Set([key(w),...(w[0]=="h"?[key(w).slice(1)]:[]),...(AL[w]||"").split(" ").filter(Boolean).map(key)]);
  return alts.some(h=>[...h.split(" "),h].some(p=>{const k=key(p);return k&&(ok.has(k)||(w.length>=5&&lev(k,key(w))<=1))}))}
 const LW={A:["apple","🍎"],B:["ball","⚽"],C:["cat","🐱"],D:["dog","🐶"],E:["egg","🥚"],F:["fish","🐟"],G:["girl","👧"],H:["hat","👒"],I:["insect","🐛"],J:["juice","🧃"],K:["kite","🪁"],L:["lion","🦁"],M:["monkey","🐒"],N:["nose","👃"],O:["octopus","🐙"],P:["panda","🐼"],Q:["queen","👑"],R:["rabbit","🐰"],S:["sun","☀️"],T:["tiger","🐯"],U:["umbrella","☂️"],V:["van","🚐"],W:["whale","🐋"],X:["box","📦"],Y:["yo-yo","🪀"],Z:["zebra","🦓"]};
 const CVC=[...W.filter(x=>x[0].length==3),["sun","שמש"],["cup","כוס"],["bus","אוטובוס"],["red","אדום"],["run","לרוץ"],["sit","לשבת"],["pig","חזיר"],["fox","שועל"],["box","קופסה"],["bat","עטלף"],["cap","כובע מצחייה"],["map","מפה"],["net","רשת"],["pin","סיכה"],["top","צמרת"],["mug","ספל"],["jam","ריבה"],["hug","חיבוק"],["lip","שפה"],["web","קורי עכביש"]];
+const SENT=[["I am a boy.","אני ילד."],["I am a girl.","אני ילדה."],["She has a hat.","יש לה כובע."],["He has a dog.","יש לו כלב."],["I have a pen.","יש לי עט."],["I like the cat.","אני אוהב/ת את החתול."],["Look at the big dog.","תסתכלו על הכלב הגדול."],["I want a banana.","אני רוצה בננה."],["The boy has a bag.","לילד יש תיק."],["The girl has a pet.","לילדה יש חיית מחמד."],["I like the lemon.","אני אוהב/ת את הלימון."],["He has a red cap.","יש לו כובע אדום."],["She has a big bed.","יש לה מיטה גדולה."],["Look at the hen.","תסתכלו על התרנגול."],["I want the hat.","אני רוצה את הכובע."],["I like the panda.","אני אוהב/ת את הפנדה."]];
 /* ---------- menu ---------- */
 function menu(){const d=Math.ceil((new Date(2026,10,5)-new Date())/864e5);
  const c=d>1?`📅 מבחן מיפוי ביום חמישי 5/11/26 – עוד ${d} ימים`:d==1?"📅 המבחן מחר! בהצלחה":d==0?"📅 המבחן היום! בהצלחה":"";
  show(`<h1>Jet 1 – Unit 3</h1><div class="red">${c}</div><div>תרגלתי, ידעתי! 💪</div>`+
  B("🔤 האותיות – גדולה וקטנה","",letters)+B("👀 מילים נפוצות – שמעו וחזרו","pu",()=>words(sh(SIGHT)))+B("🧠 מילים נפוצות – מה זה בעברית?","pu",()=>startQ(meanQ()))+
- B("🖼️ התאמת משפט לתמונה","gr",()=>startQ(sentQ()))+B("📖 קריאת מילים בנות 3 אותיות","alt",()=>words(sh(CVC).slice(0,10),true))+
+ B("🖼️ התאמת משפט לתמונה","gr",()=>startQ(sentQ()))+B("📖 קריאת מילים בנות 3 אותיות","alt",()=>words(sh(CVC).slice(0,10),true))+B("📚 קראו משפט שלם","alt",()=>words(sh(SENT).slice(0,8),true,true))+B("🧩 סדרו את המשפט","gr",orderGame)+
  B("🎧 שמעו וחזרו – 10 מילים","",()=>words(sh(W).slice(0,10)))+B("🎧 שמעו וחזרו – כל 40 המילים","mu",()=>words(sh(W)))+B("⚙️ בחירת קול","mu",settings),false)}
 function welcome(){const h="Hello Avishag! Welcome! Let's practice English.";
  show(`<div style="font-size:80px">👋</div><div class="big" style="font-size:40px">Hello, Avishag!</div><div class="big" style="font-size:22px;font-weight:400">Welcome to your English practice!</div><div>שלום אבישג! ברוכה הבאה לתרגול באנגלית 🌟</div>`+
@@ -68,16 +71,16 @@ function settings(){const t="Hello Avishag! Let's practice English.",V=voices();
  `<div class="sm">גובה הקול</div><div class="grid" style="grid-template-columns:repeat(3,1fr)">${pill("נמוך","p",.8)}${pill("רגיל","p",1)}${pill("🧒 גבוה","p",1.4)}</div>`)}
 SS.onvoiceschanged=()=>{if($("#vs"))settings()};
 /* ---------- say-and-repeat words ---------- */
-function words(list,s){L=list;i=0;score=0;res=[];silent=!!s;quiz=false;sid++;loadW()}
+function words(list,s,sn){L=list;i=0;score=0;res=[];silent=!!s;sent=!!sn;quiz=false;sid++;loadW()}
 function loadW(){const[w,h]=L[i];tries=0;auto=0;fin=false;
- show(`<div class="sm" style="font-weight:700;font-size:18px">${i+1}/${L.length} &nbsp; ⭐ ${score}</div><div class="card"><div class="w">${w}</div><div class="sm" style="font-size:24px">${h}</div>`+
+ show(`<div class="sm" style="font-weight:700;font-size:18px">${i+1}/${L.length} &nbsp; ⭐ ${score}</div><div class="card"><div class="w" ${sent?'style="font-size:30px"':""}>${w}</div><div class="sm" style="font-size:24px">${h}</div>`+
  B("🔊 שמעו שוב","mu",()=>speak(w))+`<button class="mic" id="mic" onclick="auto=0;listen()" aria-label="דברו">🎤</button><div class="msg" id="msg"></div><div class="sm" id="heard" dir="ltr"></div>${SR?"":B("אמרתי נכון ✓","gr",()=>endW(true))}</div>`+B("דלגו על המילה","mu",()=>{try{rec&&rec.abort()}catch(e){}endW(false)}));
- if(silent)msg("קראו את המילה בקול – לחצו על 🎤");else{msg("הקשיבו…");speak(w,()=>msg("עכשיו אתם! לחצו על 🎤"))}}
+ if(silent)msg((sent?"קראו את המשפט":"קראו את המילה")+" בקול – לחצו על 🎤");else{msg("הקשיבו…");speak(w,()=>msg("עכשיו אתם! לחצו על 🎤"))}}
 function listen(){if(fin)return;if(!SR){msg("הדפדפן לא תומך בזיהוי קול – השתמשו ב-Chrome או Edge","bad");return}
  SS.cancel();try{rec&&rec.abort()}catch(e){}const my=sid;rec=new SR();rec.lang="en-US";rec.maxAlternatives=5;rec.interimResults=true;
  const mic=$("#mic");mic&&mic.classList.add("on");msg("מקשיב…");let done=false;
  rec.onresult=e=>{if(my!=sid||fin)return;const r=e.results[e.results.length-1],alts=[...r].map(a=>norm(a.transcript));$("#heard").textContent="שמענו: "+alts[0];
-  if(match(alts)){done=true;rec.abort();endW(true)}else if(r.isFinal){done=true;tries++;if(tries>=2)endW(false);else msg("כמעט! נסו שוב 🎤","bad")}};
+  if((!sent||r.isFinal)&&match(alts)){done=true;rec.abort();endW(true)}else if(r.isFinal){done=true;tries++;if(tries>=2)endW(false);else msg("כמעט! נסו שוב 🎤","bad")}};
  rec.onerror=e=>{if(my!=sid||fin||done)return;if(e.error=="not-allowed"||e.error=="service-not-allowed"){msg("צריך לאשר גישה למיקרופון בדפדפן","bad");done=true}else if((e.error=="no-speech")&&auto<2){auto++;done=true;setTimeout(()=>{if(!fin&&my==sid)listen()},300)}};
  rec.onend=()=>{mic&&mic.classList.remove("on");if(my!=sid||fin||done)return;if(auto<2){auto++;setTimeout(()=>{if(!fin&&my==sid)listen()},300)}else msg("לא שמענו. נסו שוב 🎤","bad")};
  try{rec.start()}catch(e){}}
@@ -93,6 +96,14 @@ const sentQ=()=>{const P=[n=>`This is a big ${n}.`,n=>`I like the ${n}.`,n=>`I h
 const soundQ=()=>sh(LET).map(c=>{const x=c[0],[w,e]=LW[x],o=sh([x,...sh(LET.filter(y=>y!=c)).slice(0,3).map(y=>y[0])]);return{p:e,s:w,lb:x+" – "+w,o,a:o.indexOf(x),g:1,cols:2,hint:x=="X"?"באיזו אות מסתיימת המילה?":"באיזו אות מתחילה המילה?",auto:1,ps:70}});
 const meanQ=()=>sh(SIGHT).map(([w,h])=>{const o=sh([h,...sh(SIGHT.filter(y=>y[1]!=h)).slice(0,3).map(y=>y[1])]);return{p:w,s:w,lb:w,o,a:o.indexOf(h),g:1,cols:1,hint:"מה המשמעות בעברית?",auto:1,hb:1}});
 function study(){show(`<h1>🃏 לימוד האותיות</h1><div class="sm">לחצו על אות כדי לשמוע את שמה ואת המילה</div><div class="grid" style="grid-template-columns:repeat(4,1fr)" dir="ltr">`+LET.map(c=>B(c+"<br><span style='font-size:20px'>"+LW[c[0]][1]+"</span>","st",()=>speak(`Letter ${c[0]}. ${c[0]} for ${LW[c[0]][0]}`))).join("")+`</div>`)}
+function orderGame(){Q=sh(SENT).slice(0,8);i=0;score=0;res=[];quiz=true;sent=false;sid++;ordShow()}
+function ordShow(){const[s,h]=Q[i],ws=s.replace(/[.!?]/g,"").split(" ");O={s,h,ws,pos:0,bad:false,my:sid};
+ show(`<div class="sm" style="font-weight:700;font-size:18px">${i+1}/${Q.length} &nbsp; ⭐ ${score}</div><div class="sm">סדרו את המילים למשפט:</div><div class="card"><div class="sm" style="font-size:20px">${h}</div><div class="big" id="line" style="min-height:44px;font-size:28px"></div></div>`+B("🔊 שמעו את המשפט","mu",()=>speak(s))+
+ `<div class="grid" style="grid-template-columns:repeat(2,1fr)" dir="ltr">`+sh(ws.map((w,k)=>k)).map(k=>`<button class="st" id="c${k}" onclick="ordTap(${k})">${ws[k]}</button>`).join("")+`</div><div class="msg" id="msg"></div>`)}
+function ordTap(k){if(!O||O.done)return;const b=$("#c"+k);if(!b||b.disabled)return;
+ if(O.ws[k]==O.ws[O.pos]){b.disabled=true;b.style.opacity=.3;O.pos++;$("#line").textContent=O.ws.slice(0,O.pos).join(" ");
+  if(O.pos==O.ws.length){O.done=true;const ok=!O.bad;res.push([O.s,O.h,ok]);if(ok)score++;msg(ok?"כל הכבוד! ✓":"סיימתם! 👍","ok");speak(O.s);const my=O.my;setTimeout(()=>{if(my!=sid)return;i++;i<Q.length?ordShow():end()},2300)}}
+ else{O.bad=true;msg("לא המילה הבאה, נסו שוב","bad");b.style.background="var(--bad)";setTimeout(()=>{b.style.background=""},600)}}
 function startQ(q){Q=q;i=0;score=0;res=[];quiz=true;sid++;showQ()}
 function showQ(){const q=Q[i],my=sid;fin=false;
  show(`<div class="sm" style="font-weight:700;font-size:18px">${i+1}/${Q.length} &nbsp; ⭐ ${score}</div><div class="sm">${q.hint}</div><div class="big" style="${q.g?(q.ps?'font-size:'+q.ps+'px':''):'font-weight:700;font-size:24px;direction:rtl'}">${q.p}</div>`+B("🔊 שמעו שוב","mu",()=>speak(q.s))+
