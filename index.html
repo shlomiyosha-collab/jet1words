@@ -28,12 +28,12 @@ const W=[["bag","תיק"],["banana","בננה"],["Dad","אבא"],["bad","רע"],
 const SIGHT=[["Look","להסתכל"],["I am","אני"],["He","הוא"],["She","היא"],["Have","יש ל..."],["Has","יש ל... (לו / לה)"],["The","ה הידיעה"],["Like","לאהוב"],["Want","לרצות"],["Girl","ילדה"],["Boy","ילד"]];
 const LET=[..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].map(c=>c+c.toLowerCase());
 const ITEMS=[["cat","🐱"],["dog","🐶"],["hen","🐔"],["panda","🐼"],["hat","👒"],["bag","🎒"],["pen","🖊️"],["bed","🛏️"],["egg","🥚"],["banana","🍌"],["lemon","🍋"],["melon","🍈"]];
-const AL={bag:"bags bague",banana:"bananas",dad:"dads daddy dat",bad:"bads bat",egg:"eggs eg ag ecg",bed:"bet bedd beds",sad:"sat said sed",hat:"hats had hut at at hurt",test:"tests text tast",pen:"pens penn pan",hen:"hens when then ben en een",hand:"hands han and an handed",help:"helps helped elp kelp yelp held hell",big:"bick bigg",stop:"stops stopp",hot:"hut hots ot hott what",cold:"called coal colt",lost:"lust last",dog:"dogs doug dug",job:"jobs jab jog",plan:"plans plant plane",pet:"pets pat bet pit",leg:"legs lag lek",grandpa:"grandpas grampa gramps grandfather",lamp:"lamps lamb ramp",mat:"mats matt mutt met",sing:"sings sink singh",ten:"then tin tan",mad:"made mud med",glad:"clad glade gland",cat:"cats kat cut cap",on:"own un ahn",in:"inn n",add:"ad adds",mom:"mum mama mommy mam",lemon:"lemons lemmon",melon:"melons mellon malone",grandma:"grandmas gramma grandmother",and:"an n end ann ant",panda:"pandas pander",look:"looks luck lock","i am":"iam im am",have:"half halve ave av",has:"as haz hass az hz his",the:"thee da duh thuh tha de",like:"likes liked lyke",he:"hey hee hi e ee who",she:"shea shi",want:"wont once wanted wan",girl:"gal curl grill gir",boy:"buoy boi bye",sun:"son one sunn",cup:"cop cap cut",bus:"boss bass buzz",red:"read rid",run:"ron one",sit:"set sick sat",pig:"big peg pick",fox:"folks box",box:"books bucks",bat:"bad bet bart",cap:"cup cat kap",map:"mop mat mac",net:"nut not neck",pin:"pen ping",top:"tap tip tub",mug:"mom mud mark",jam:"jem gem ham",hug:"hog hack ug",lip:"lib lap leap",web:"wet wed ebb"};
+const AL={bag:"bags bague",banana:"bananas",dad:"dads daddy dat",bad:"bads bat",egg:"eggs eg ag ecg",bed:"bet bedd beds",sad:"sat said sed",hat:"hats had hut at at hurt",test:"tests text tast",pen:"pens penn pan",hen:"hens when then ben en een",hand:"hands han and an handed",help:"helps helped elp kelp yelp held hell",big:"bick bigg",stop:"stops stopp",hot:"hut hots ot hott what",cold:"called coal colt",lost:"lust last",dog:"dogs doug dug",job:"jobs jab jog",plan:"plans plant plane",pet:"pets pat bet pit",leg:"legs lag lek",grandpa:"grandpas grampa gramps grandfather",lamp:"lamps lamb ramp",mat:"mats matt mutt met",sing:"sings sink singh",ten:"then tin tan",mad:"made mud med",glad:"clad glade gland",cat:"cats kat cut cap",on:"own un ahn",in:"inn n",add:"ad adds",mom:"mum mama mommy mam",lemon:"lemons lemmon",melon:"melons mellon malone",grandma:"grandmas gramma grandmother",and:"an n end ann ant",panda:"pandas pander",look:"looks luck lock","i am":"iam im am",have:"half halve ave av",has:"as haz hass az hz his",the:"thee da duh thuh tha de",like:"likes liked lyke",he:"hey hee hi e ee who",she:"shea shi",gray:"grey great grade",yellow:"yellowish yellows",green:"grin greene",brown:"brawn brownie",orange:"oranges ornge",blue:"blew blues",black:"block back blacks",white:"wite right whites",pink:"pinks ping",purple:"purpel people","light blue":"lightblue like blue light blu",want:"wont once wanted wan",girl:"gal curl grill gir",boy:"buoy boi bye",sun:"son one sunn",cup:"cop cap cut",bus:"boss bass buzz",red:"read rid",run:"ron one",sit:"set sick sat",pig:"big peg pick",fox:"folks box",box:"books bucks",bat:"bad bet bart",cap:"cup cat kap",map:"mop mat mac",net:"nut not neck",pin:"pen ping",top:"tap tip tub",mug:"mom mud mark",jam:"jem gem ham",hug:"hog hack ug",lip:"lib lap leap",web:"wet wed ebb",yellow:"yellows yello",gray:"grey great grate",green:"grin greene",brown:"brow brawn",orange:"oranges",blue:"blew blu",black:"block back",white:"wight why",pink:"pin ping",purple:"purpl people","light blue":"lightblue light blu"};
 const $=s=>document.querySelector(s),acts=[];
 let cfg={v:"",r:.8,p:1};try{Object.assign(cfg,JSON.parse(localStorage.getItem("jet1cfg")||"{}"))}catch(e){}
 const sv=()=>{try{localStorage.setItem("jet1cfg",JSON.stringify(cfg))}catch(e){}},voices=()=>SS.getVoices().filter(v=>/^en/i.test(v.lang));
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let sid=0,fin=false,rec=null,tries=0,auto=0,L=[],i=0,score=0,res=[],silent=false,quiz=false,Q=[];
+let sent=false,O=null,sid=0,fin=false,rec=null,tries=0,auto=0,L=[],i=0,score=0,res=[],silent=false,quiz=false,Q=[];
 const sh=a=>[...a].sort(()=>Math.random()-.5);
 function B(t,c,f){acts.push(f);return `<button class="${c||''}" onclick="acts[${acts.length-1}]()">${t}</button>`}
 function show(h,back=true){try{rec&&rec.abort()}catch(e){}$("#app").innerHTML=h+(back?B("🏠 תפריט ראשי","hm",home):"")}
@@ -43,16 +43,21 @@ function msg(t,c){const m=$("#msg");if(m){m.textContent=t;m.className="msg "+(c|
 /* ---------- matching ---------- */
 const norm=s=>s.toLowerCase().replace(/&/g," and ").replace(/10/g,"ten").replace(/[^a-z ]/g,"").trim(),key=s=>norm(s).replace(/ /g,"");
 function lev(a,b){let p=[...Array(b.length+1).keys()];for(let x=1;x<=a.length;x++){const c=[x];for(let y=1;y<=b.length;y++)c[y]=Math.min(p[y]+1,c[y-1]+1,p[y-1]+(a[x-1]==b[y-1]?0:1));p=c}return p[b.length]}
-function match(alts){const w=L[i][0].toLowerCase(),ok=new Set([key(w),...(w[0]=="h"?[key(w).slice(1)]:[]),...(AL[w]||"").split(" ").filter(Boolean).map(key)]);
+function sameW(h,w){const k=key(h),t=key(w);if(!k)return false;if(k==t)return true;if((AL[t]||"").split(" ").map(key).includes(k))return true;if(t[0]=="h"&&k==t.slice(1))return true;return t.length>=4&&lev(k,t)<=1}
+function matchS(alts){const tw=norm(L[i][0]).split(" ").filter(Boolean),need=Math.max(1,Math.ceil(tw.length*.7));return alts.some(a=>{const hw=norm(a).split(" ");return tw.filter(w=>hw.some(h=>sameW(h,w))).length>=need})}
+function match(alts){if(sent)return matchS(alts);const w=L[i][0].toLowerCase(),ok=new Set([key(w),...(w[0]=="h"?[key(w).slice(1)]:[]),...(AL[w]||"").split(" ").filter(Boolean).map(key)]);
  return alts.some(h=>[...h.split(" "),h].some(p=>{const k=key(p);return k&&(ok.has(k)||(w.length>=5&&lev(k,key(w))<=1))}))}
 const LW={A:["apple","🍎"],B:["ball","⚽"],C:["cat","🐱"],D:["dog","🐶"],E:["egg","🥚"],F:["fish","🐟"],G:["girl","👧"],H:["hat","👒"],I:["insect","🐛"],J:["juice","🧃"],K:["kite","🪁"],L:["lion","🦁"],M:["monkey","🐒"],N:["nose","👃"],O:["octopus","🐙"],P:["panda","🐼"],Q:["queen","👑"],R:["rabbit","🐰"],S:["sun","☀️"],T:["tiger","🐯"],U:["umbrella","☂️"],V:["van","🚐"],W:["whale","🐋"],X:["box","📦"],Y:["yo-yo","🪀"],Z:["zebra","🦓"]};
 const CVC=[...W.filter(x=>x[0].length==3),["sun","שמש"],["cup","כוס"],["bus","אוטובוס"],["red","אדום"],["run","לרוץ"],["sit","לשבת"],["pig","חזיר"],["fox","שועל"],["box","קופסה"],["bat","עטלף"],["cap","כובע מצחייה"],["map","מפה"],["net","רשת"],["pin","סיכה"],["top","צמרת"],["mug","ספל"],["jam","ריבה"],["hug","חיבוק"],["lip","שפה"],["web","קורי עכביש"]];
+const COL=[["red","אדום","#e5484d"],["yellow","צהוב","#ffd60a"],["gray","אפור","#8e8e93"],["green","ירוק","#1fa968"],["brown","חום","#8b5a2b"],["orange","כתום","#ff8c00"],["blue","כחול","#2f6df6"],["black","שחור","#111111"],["white","לבן","#ffffff"],["pink","ורוד","#ff7eb6"],["purple","סגול","#8e44ad"],["light blue","תכלת","#7fd3ff"]];
+const SENT=[["Today is Monday.","היום יום שני."],["I am a boy.","אני ילד."],["I am a girl.","אני ילדה."],["She has a hat.","יש לה כובע."],["He has a dog.","יש לו כלב."],["I have a pen.","יש לי עט."],["I like the cat.","אני אוהב/ת את החתול."],["Look at the big dog.","תסתכלו על הכלב הגדול."],["I want a banana.","אני רוצה בננה."],["The boy has a bag.","לילד יש תיק."],["The girl has a pet.","לילדה יש חיית מחמד."],["I like the lemon.","אני אוהב/ת את הלימון."],["He has a red cap.","יש לו כובע אדום."],["She has a big bed.","יש לה מיטה גדולה."],["Look at the hen.","תסתכלו על התרנגול."],["I want the hat.","אני רוצה את הכובע."],["I like the panda.","אני אוהב/ת את הפנדה."]];
+function cd(){const d=Math.ceil((new Date(2026,10,23)-new Date())/864e5);return d>1?`✍️ הכתבה ביום שני 23/11/26 – עוד ${d} ימים`:d==1?"✍️ הכתבה מחר! בהצלחה":d==0?"✍️ הכתבה היום! בהצלחה":""}
 /* ---------- menu ---------- */
 function menu(){const d=Math.ceil((new Date(2026,10,5)-new Date())/864e5);
  const c=d>1?`📅 מבחן מיפוי ביום חמישי 5/11/26 – עוד ${d} ימים`:d==1?"📅 המבחן מחר! בהצלחה":d==0?"📅 המבחן היום! בהצלחה":"";
- show(`<h1>Jet 1 – Unit 3</h1><div class="red">${c}</div><div>תרגלתי, ידעתי! 💪</div>`+
+ show(`<h1>Jet 1 – Unit 3</h1><div class="red">${c}</div><div class="red">${cd()}</div><div>תרגלתי, ידעתי! 💪</div>`+
  B("🔤 האותיות – גדולה וקטנה","",letters)+B("👀 מילים נפוצות – שמעו וחזרו","pu",()=>words(sh(SIGHT)))+B("🧠 מילים נפוצות – מה זה בעברית?","pu",()=>startQ(meanQ()))+
- B("🖼️ התאמת משפט לתמונה","gr",()=>startQ(sentQ()))+B("📖 קריאת מילים בנות 3 אותיות","alt",()=>words(sh(CVC).slice(0,10),true))+
+ B("🖼️ התאמת משפט לתמונה","gr",()=>startQ(sentQ()))+B("📖 קריאת מילים בנות 3 אותיות","alt",()=>words(sh(CVC).slice(0,10),true))+B("📚 קראו משפט שלם","alt",()=>words(sh(SENT).slice(0,8),true,true))+B("🧩 סדרו את המשפט","gr",orderGame)+B("🎨 צבעים – שמעו וחזרו","pu",()=>words(sh(COL).map(c=>[c[0],c[1]])))+B("🌈 צבעים – בחרו את הצבע","pu",()=>startQ(colorQ()))+B("✍️ הכתבה (יום שני) – צבעים","gr",dictGame)+
  B("🎧 שמעו וחזרו – 10 מילים","",()=>words(sh(W).slice(0,10)))+B("🎧 שמעו וחזרו – כל 40 המילים","mu",()=>words(sh(W)))+B("⚙️ בחירת קול","mu",settings),false)}
 function welcome(){const h="Hello Avishag! Welcome! Let's practice English.";
  show(`<div style="font-size:80px">👋</div><div class="big" style="font-size:40px">Hello, Avishag!</div><div class="big" style="font-size:22px;font-weight:400">Welcome to your English practice!</div><div>שלום אבישג! ברוכה הבאה לתרגול באנגלית 🌟</div>`+
@@ -66,6 +71,51 @@ function settings(){const t="Hello Avishag! Let's practice English.",V=voices();
  (V.length?V.map(v=>`<option value="${v.name}" ${v.name==cfg.v?"selected":""}>${v.name} (${v.lang})</option>`).join(""):"<option>לא נמצאו קולות באנגלית</option>")+`</select>`+
  B("🔊 שמעו דוגמה","",()=>speak(t))+`<div class="sm">מהירות</div><div class="grid" style="grid-template-columns:repeat(3,1fr)">${pill("🐢 איטי","r",.6)}${pill("רגיל","r",.8)}${pill("🐇 מהיר","r",1)}</div>`+
  `<div class="sm">גובה הקול</div><div class="grid" style="grid-template-columns:repeat(3,1fr)">${pill("נמוך","p",.8)}${pill("רגיל","p",1)}${pill("🧒 גבוה","p",1.4)}</div>`)}
+SS.onvoiceschanged=()=>{if($("#vs"))settings()};
+/* ---------- say-and-repeat words ---------- */
+function words(list,s,sn){L=list;i=0;score=0;res=[];silent=!!s;sent=!!sn;quiz=false;sid++;loadW()}
+function loadW(){const[w,h]=L[i];tries=0;auto=0;fin=false;
+ show(`<div class="sm" style="font-weight:700;font-size:18px">${i+1}/${L.length} &nbsp; ⭐ ${score}</div><div class="card"><div class="w" ${sent?'style="font-size:30px"':""}>${w}</div><div class="sm" style="font-size:24px">${h}</div>`+
+ B("🔊 שמעו שוב","mu",()=>speak(w))+`<button class="mic" id="mic" onclick="auto=0;listen()" aria-label="דברו">🎤</button><div class="msg" id="msg"></div><div class="sm" id="heard" dir="ltr"></div>${SR?"":B("אמרתי נכון ✓","gr",()=>endW(true))}</div>`+B("דלגו על המילה","mu",()=>{try{rec&&rec.abort()}catch(e){}endW(false)}));
+ if(silent)msg((sent?"קראו את המשפט":"קראו את המילה")+" בקול – לחצו על 🎤");else{msg("הקשיבו…");speak(w,()=>msg("עכשיו אתם! לחצו על 🎤"))}}
+function listen(){if(fin)return;if(!SR){msg("הדפדפן לא תומך בזיהוי קול – השתמשו ב-Chrome או Edge","bad");return}
+ SS.cancel();try{rec&&rec.abort()}catch(e){}const my=sid;rec=new SR();rec.lang="en-US";rec.maxAlternatives=5;rec.interimResults=true;
+ const mic=$("#mic");mic&&mic.classList.add("on");msg("מקשיב…");let done=false;
+ rec.onresult=e=>{if(my!=sid||fin)return;const r=e.results[e.results.length-1],alts=[...r].map(a=>norm(a.transcript));$("#heard").textContent="שמענו: "+alts[0];
+  if((!sent||r.isFinal)&&match(alts)){done=true;rec.abort();endW(true)}else if(r.isFinal){done=true;tries++;if(tries>=2)endW(false);else msg("כמעט! נסו שוב 🎤","bad")}};
+ rec.onerror=e=>{if(my!=sid||fin||done)return;if(e.error=="not-allowed"||e.error=="service-not-allowed"){msg("צריך לאשר גישה למיקרופון בדפדפן","bad");done=true}else if((e.error=="no-speech")&&auto<2){auto++;done=true;setTimeout(()=>{if(!fin&&my==sid)listen()},300)}};
+ rec.onend=()=>{mic&&mic.classList.remove("on");if(my!=sid||fin||done)return;if(auto<2){auto++;setTimeout(()=>{if(!fin&&my==sid)listen()},300)}else msg("לא שמענו. נסו שוב 🎤","bad")};
+ try{rec.start()}catch(e){}}
+function endW(ok){if(fin)return;fin=true;const[w,h]=L[i];res.push([w,h,ok]);if(ok){score++;msg("כל הכבוד! ✓","ok")}else{msg("נמשיך הלאה. המילה: "+w,"bad");speak(w)}
+ const my=sid;setTimeout(()=>{if(my!=sid)return;i++;i<L.length?loadW():end()},1300)}
+/* ---------- quizzes ---------- */
+const pick=(l,u)=>u?l[0]:l[1],rnd=()=>Math.random()<.5;
+function letters(){show(`<h1>🔤 האותיות</h1><div class="sm" dir="ltr">${LET.join(" ")}</div>`+B("🃏 לימוד: לחצו על אות ושמעו","gr",study)+B("🔊 שמעו את שם האות ובחרו","",()=>startQ(hearQ()))+B("🎯 באיזו אות מתחילה המילה? (צליל)","pu",()=>startQ(soundQ()))+B("A ← a &nbsp; מגדולה לקטנה","alt",()=>startQ(caseQ(true)))+B("a ← A &nbsp; מקטנה לגדולה","pu",()=>startQ(caseQ(false))))}
+const hearQ=()=>sh(LET).map(c=>{const u=rnd(),a=pick(c,u),o=sh([a,...sh(LET.filter(x=>x!=c)).slice(0,3).map(x=>pick(x,rnd()))]);return{p:"🔊 איזו אות שמעתם?",s:"Letter "+c[0],lb:c,o,a:o.indexOf(a),g:0,cols:2,hint:"",auto:1}});
+const caseQ=sm=>sh(LET).map(c=>{const a=pick(c,!sm),o=sh([a,...sh(LET.filter(x=>x!=c)).slice(0,3).map(x=>pick(x,!sm))]);return{p:pick(c,sm)+" → ?",s:"Letter "+c[0],lb:c,o,a:o.indexOf(a),g:1,cols:2,hint:sm?"מצאו את האות הקטנה":"מצאו את האות הגדולה",auto:0}});
+const sentQ=()=>{const P=[n=>`This is a big ${n}.`,n=>`I like the ${n}.`,n=>`I have ${n=="egg"?"an":"a"} ${n}.`,n=>`Look at the ${n}!`];
+ return sh(ITEMS).slice(0,10).map(([n,e],k)=>{const s=P[k%4](n),o=sh([e,...sh(ITEMS.filter(x=>x[0]!=n)).slice(0,2).map(x=>x[1])]);return{p:s,s,lb:s,o,a:o.indexOf(e),g:1,cols:3,hint:"",auto:1,e:1}})};
+const soundQ=()=>sh(LET).map(c=>{const x=c[0],[w,e]=LW[x],o=sh([x,...sh(LET.filter(y=>y!=c)).slice(0,3).map(y=>y[0])]);return{p:e,s:w,lb:x+" – "+w,o,a:o.indexOf(x),g:1,cols:2,hint:x=="X"?"באיזו אות מסתיימת המילה?":"באיזו אות מתחילה המילה?",auto:1,ps:70}});
+const meanQ=()=>sh(SIGHT).map(([w,h])=>{const o=sh([h,...sh(SIGHT.filter(y=>y[1]!=h)).slice(0,3).map(y=>y[1])]);return{p:w,s:w,lb:w,o,a:o.indexOf(h),g:1,cols:1,hint:"מה המשמעות בעברית?",auto:1,hb:1}});
+function study(){show(`<h1>🃏 לימוד האותיות</h1><div class="sm">לחצו על אות כדי לשמוע את שמה ואת המילה</div><div class="grid" style="grid-template-columns:repeat(4,1fr)" dir="ltr">`+LET.map(c=>B(c+"<br><span style='font-size:20px'>"+LW[c[0]][1]+"</span>","st",()=>speak(`Letter ${c[0]}. ${c[0]} for ${LW[c[0]][0]}`))).join("")+`</div>`)}
+function orderGame(){Q=sh(SENT).slice(0,8);i=0;score=0;res=[];quiz=true;sent=false;sid++;ordShow()}
+function ordShow(){const[s,h]=Q[i],ws=s.replace(/[.!?]/g,"").split(" ");O={s,h,ws,pos:0,bad:false,my:sid};
+ show(`<div class="sm" style="font-weight:700;font-size:18px">${i+1}/${Q.length} &nbsp; ⭐ ${score}</div><div class="sm">סדרו את המילים למשפט:</div><div class="card"><div class="sm" style="font-size:20px">${h}</div><div class="big" id="line" style="min-height:44px;font-size:28px"></div></div>`+B("🔊 שמעו את המשפט","mu",()=>speak(s))+
+ `<div class="grid" style="grid-template-columns:repeat(2,1fr)" dir="ltr">`+sh(ws.map((w,k)=>k)).map(k=>`<button class="st" id="c${k}" onclick="ordTap(${k})">${ws[k]}</button>`).join("")+`</div><div class="msg" id="msg"></div>`)}
+function ordTap(k){if(!O||O.done)return;const b=$("#c"+k);if(!b||b.disabled)return;
+ if(O.ws[k]==O.ws[O.pos]){b.disabled=true;b.style.opacity=.3;O.pos++;$("#line").textContent=O.ws.slice(0,O.pos).join(" ");
+  if(O.pos==O.ws.length){O.done=true;const ok=!O.bad;res.push([O.s,O.h,ok]);if(ok)score++;msg(ok?"כל הכבוד! ✓":"סיימתם! 👍","ok");speak(O.s);const my=O.my;setTimeout(()=>{if(my!=sid)return;i++;i<Q.length?ordShow():end()},2300)}}
+ else{O.bad=true;msg("לא המילה הבאה, נסו שוב","bad");b.style.background="var(--bad)";setTimeout(()=>{b.style.background=""},600)}}
+const colorQ=()=>sh(COL).map(c=>{const o=sh([c[2],...sh(COL.filter(x=>x!=c)).slice(0,3).map(x=>x[2])]);return{p:c[0],s:c[0],lb:c[0]+" – "+c[1],o,a:o.indexOf(c[2]),g:1,cols:2,hint:"בחרו את הצבע",auto:1,sw:1}});
+function dictGame(){Q=sh(COL);i=0;score=0;res=[];quiz=true;sent=false;sid++;dictShow()}
+function dictShow(){const c=Q[i];O={c,tries:0,hl:0,done:false,my:sid};
+ show(`<div class="sm" style="font-weight:700;font-size:18px">${i+1}/${Q.length} &nbsp; ⭐ ${score}</div><div class="card"><div class="sm" style="font-size:20px">✍️ הקשיבו וכתבו את המילה באנגלית</div><div class="sm" style="font-size:22px">${c[1]}</div><div id="hint" class="big" style="min-height:40px;letter-spacing:4px"></div><input id="inp" dir="ltr" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" onkeydown="if(event.key=='Enter')dictCheck()" style="font-size:30px;width:100%;padding:10px;border-radius:12px;text-align:center"></div>`+
+ B("🔊 שמעו את המילה","mu",()=>speak(c[0]))+B("💡 רמז","alt",()=>{O.hl++;$("#hint").textContent=c[0].split("").map((x,k)=>x==" "?"\u00a0":(O.hl>1&&k==0?x:"_")).join(" ")})+B("בדקו ✓","gr",dictCheck)+`<div class="msg" id="msg"></div>`);
+ speak(c[0])}
+function dictCheck(){if(!O||O.done)return;const c=O.c,v=key($("#inp").value),ok=v==key(c[0])||(c[0]=="gray"&&v=="grey");if(!v)return;const my=O.my;
+ const nx=()=>setTimeout(()=>{if(my!=sid)return;i++;i<Q.length?dictShow():end()},1700);
+ if(ok){O.done=true;res.push([c[0],c[1],true]);score++;msg("כל הכבוד! ✓","ok");speak(c[0]);nx()}
+ else{O.tries++;if(O.tries>=2){O.done=true;res.push([c[0],c[1],false]);msg("המילה הנכונה: "+c[0],"bad");speak(c[0]);nx()t(3,1fr)">${pill("נמוך","p",.8)}${pill("רגיל","p",1)}${pill("🧒 גבוה","p",1.4)}</div>`)}
 SS.onvoiceschanged=()=>{if($("#vs"))settings()};
 /* ---------- say-and-repeat words ---------- */
 function words(list,s){L=list;i=0;score=0;res=[];silent=!!s;quiz=false;sid++;loadW()}
